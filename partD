@@ -5,25 +5,33 @@ clc;
 load('path.mat');
 load('css.mat');
 
-far_end_signal = repmat(css, [1, 10]); % Repeat CSS data for 10 blocks
-echo_signal = conv(path, far_end_signal);
-desired_signal = echo_signal;
+far_end_signal = repmat(css, 1, 10); % Repeat CSS data for 10 blocks
+echo_signal = filter(path, 1, far_end_signal);
 
 filter_length = 128; % Number of filter taps
-step_size = 6e-10; % NLMS step size
+step_size = 1e-6; % NLMS step size
 mu = 0.25; % Step size for NLMS algorithm
 adapt_filter = zeros(filter_length, 1); % Initialize adaptive filter coefficients
+delayedFarEndSignal = zeros(filter_length, 1);  
 
 % Initialize error signal with the size of far_end_signal
-error_signal = zeros(length(far_end_signal), 1);
+error_signal = zeros(size(far_end_signal));
+estimatedEchoPath = zeros(size(far_end_signal));
 
-% Apply the NLMS algorithm to train the adaptive filter
-for n = filter_length:length(far_end_signal)
-    x = far_end_signal(n:-1:n-filter_length+1)';
-    y = adapt_filter' * x;
-    error = desired_signal(n) - y;
-    adapt_filter = adapt_filter + (step_size * x * error) / (norm(x)^2 + mu);
-    error_signal(n) = error;
+for n = 1:length(far_end_signal)
+    farEndSample = far_end_signal(n);
+    echoSample = echo_signal(n);
+    
+    y = adapt_filter' * delayedFarEndSignal; % Output of adaptive filter
+    error = echoSample - y; % Error signal
+    
+    adapt_filter = adapt_filter + (mu / (norm(delayedFarEndSignal)^2 + step_size)) * conj(delayedFarEndSignal) * error; % Update filter weights
+    
+    error_signal(n) = error; % Store error signal
+    estimatedEchoPath(n) = adapt_filter' * delayedFarEndSignal; % Estimate of echo path
+    
+    % Shift the delayedFarEndSignal by 1 sample
+    delayedFarEndSignal = [farEndSample; delayedFarEndSignal(1:end-1)];
 end
 
 % Plotting the signals and estimated echo path
@@ -38,8 +46,5 @@ subplot(5, 1, 3);
 plot(error_signal);
 title('Error Signal');
 subplot(5, 1, 4);
-plot(path);
-title('Echo Path');
-subplot(5, 1, 5);
-plot(conv(far_end_signal, adapt_filter));
+plot(estimatedEchoPath);
 title('Estimated Echo Path');
