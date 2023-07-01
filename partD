@@ -1,3 +1,5 @@
+%Salwa Fayyad 1200430 , Sondos Farrah 1200905 , Katya Kobari 1201478
+
 close all;
 clear all;
 clc;
@@ -5,46 +7,46 @@ clc;
 load('path.mat');
 load('css.mat');
 
-far_end_signal = repmat(css, 1, 10); % Repeat CSS data for 10 blocks
-echo_signal = filter(path, 1, far_end_signal);
+farEnd = repmat(css, 1, 10); % Repeat CSS data for 10 blocks
+echo = filter(path, 1, farEnd);
 
 filter_length = 128; % Number of filter taps
 step_size = 1e-6; % NLMS step size
 mu = 0.25; % Step size for NLMS algorithm
 adapt_filter = zeros(filter_length, 1); % Initialize adaptive filter coefficients
-delayedFarEndSignal = zeros(filter_length, 1);  
+delayedFarEnd = zeros(filter_length, 1);  
 
-% Initialize error signal with the size of far_end_signal
-error_signal = zeros(size(far_end_signal));
-estimatedEchoPath = zeros(size(far_end_signal));
+% Initialize error signal with the size of far end
+error_signal = zeros(size(farEnd));
+estimatedPath = zeros(size(farEnd));
 
-for n = 1:length(far_end_signal)
-    farEndSample = far_end_signal(n);
-    echoSample = echo_signal(n);
+for n = 1:length(farEnd)
+    farEndSample = farEnd(n);
+    echoSample = echo(n);
     
-    y = adapt_filter' * delayedFarEndSignal; % Output of adaptive filter
+    y = adapt_filter' * delayedFarEnd; % Output of adaptive filter
     error = echoSample - y; % Error signal
     
-    adapt_filter = adapt_filter + (mu / (norm(delayedFarEndSignal)^2 + step_size)) * conj(delayedFarEndSignal) * error; % Update filter weights
+    adapt_filter = adapt_filter + (mu / (norm(delayedFarEnd)^2 + step_size)) * conj(delayedFarEnd) * error; % Update filter weights
     
     error_signal(n) = error; % Store error signal
-    estimatedEchoPath(n) = adapt_filter' * delayedFarEndSignal; % Estimate of echo path
+    estimatedPath(n) = adapt_filter' * delayedFarEnd; % Estimate of echo path
     
     % Shift the delayedFarEndSignal by 1 sample
-    delayedFarEndSignal = [farEndSample; delayedFarEndSignal(1:end-1)];
+    delayedFarEnd = [farEndSample; delayedFarEnd(1:end-1)];
 end
 
 % Plotting the signals and estimated echo path
 figure;
 subplot(5, 1, 1);
-plot(far_end_signal);
+plot(farEnd,'g');
 title('Far-End Signal');
 subplot(5, 1, 2);
-plot(echo_signal);
+plot(echo);
 title('Echo Signal');
 subplot(5, 1, 3);
-plot(error_signal);
+plot(error_signal,'r');
 title('Error Signal');
 subplot(5, 1, 4);
-plot(estimatedEchoPath);
+plot(estimatedEchoPath,'m');
 title('Estimated Echo Path');
