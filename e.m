@@ -1,35 +1,51 @@
-% Load CSS data and echo path
-load('css.mat');
+close all;
+clear all;
+clc;
+
 load('path.mat');
+load('css.mat');
 
-% Apply NLMS algorithm to train the adaptive filter
-filter_length = 128;
-adapt_filter = zeros(filter_length, 1);
-mu = 0.25;
-step_size = 6e-10;
-desired_signal = conv(path, css);
-error_signal = zeros(length(css), 1);
+far_end_signal = repmat(css, 1, 10); % Repeat CSS data for 10 blocks
+echo_signal = filter(path, 1, far_end_signal);
 
-for n = filter_length:length(css)
-    x = css(n:-1:n-filter_length+1);
-    y = adapt_filter.' * x.';
-    error = desired_signal(n) - y;
-    adapt_filter = adapt_filter + (step_size * x.' * error) / (norm(x)^2 + mu);
-    error_signal(n) = error;
+filter_length = 128; % Number of filter taps
+step_size = 1e-6; % NLMS step size
+mu = 0.25; % Step size for NLMS algorithm
+adapt_filter = zeros(filter_length, 1); % Initialize adaptive filter coefficients
+delayedFarEndSignal = zeros(filter_length, 1);  
+
+% Initialize error signal with the size of far_end_signal
+error_signal = zeros(size(far_end_signal));
+estimatedEchoPath = zeros(size(far_end_signal));
+
+for n = 1:length(far_end_signal)
+    farEndSample = far_end_signal(n);
+    echoSample = echo_signal(n);
+    
+    y = adapt_filter' * delayedFarEndSignal; % Output of adaptive filter
+    error = echoSample - y; % Error signal
+    
+    adapt_filter = adapt_filter + (mu / (norm(delayedFarEndSignal)^2 + step_size)) * conj(delayedFarEndSignal) * error; % Update filter weights
+    
+    error_signal(n) = error; % Store error signal
+    estimatedEchoPath(n) = adapt_filter' * delayedFarEndSignal; % Estimate of echo path
+    
+    % Shift the delayedFarEndSignal by 1 sample
+    delayedFarEndSignal = [farEndSample; delayedFarEndSignal(1:end-1)];
 end
 
 % Compute the frequency response of the estimated FIR channel
-[H_est, w_est] = freqz(adapt_filter);
+[H_est, w_est] = freqz(adapt_filter, 1, length(adapt_filter));
 
 % Compute the frequency response of the given FIR system (Path)
-[H_path, w_path] = freqz(path);
+[H_path, w_path] = freqz(path, 1, length(path));
 
 % Plot the amplitude response
 figure;
 subplot(2, 1, 1);
-plot(w_est/pi, abs(H_est));
+plot(w_est/pi, 20*log10(abs(H_est)));
 hold on;
-plot(w_path/pi, abs(H_path));
+plot(w_path/pi, 20*log10(abs(H_path)));
 hold off;
 title('Amplitude Response');
 xlabel('Normalized Frequency (\times\pi rad/sample)');
