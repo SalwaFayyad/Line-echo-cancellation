@@ -1,7 +1,7 @@
                       APPENDIX
 %  part A
 
-%Salwa Fayyad 1200430 , Sondos Farrah 1200905 , Katya Kobari 1201478
+
 load('path.mat');
 subplot(2, 1, 1);
 plot(path,'m','LineWidth',2);
@@ -23,7 +23,7 @@ title('Frequency Response ');
 %  part B and the plot part of part C
 
 
-%Salwa Fayyad 1200430 , Sondos Farrah 1200905 , Katya Kobari 1201478
+
 close all;
 clear all;
 clc;
@@ -64,7 +64,7 @@ ylabel('Amplitude');
 %-----------------------------C
 % calculating part of part C
 
-%Salwa Fayyad 1200430 , Sondos Farrah 1200905 , Katya Kobari 1201478
+
 close all;
 clear all;
 clc;
@@ -80,7 +80,7 @@ ERL = OutputPower-InputPower
 
 %-----------------------------D
 %part D 
-%Salwa Fayyad 1200430 , Sondos Farrah 1200905 , Katya Kobari 1201478
+
 
 close all;
 clear all;
@@ -135,7 +135,7 @@ title('Estimated Echo Path');
 %-----------------------------E
 %part E
 
-%Salwa Fayyad 1200430 , Sondos Farrah 1200905 , Katya Kobari 1201478
+
 close all;
 clear all;
 clc;
@@ -203,7 +203,7 @@ legend('Estimated FIR Channel', 'Given FIR System (Path)');
 
 %--------------------------------F
 %part F  
-%Salwa Fayyad 1200430 , Sondos Farrah 1200905 , Katya Kobari 1201478
+
 close all;
 clear all;
 clc;
